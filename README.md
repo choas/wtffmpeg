@@ -160,7 +160,7 @@ Executing: ls -l *.mp4
 wtff>
 ```
 
-So of course if you want to stay in interaactive mode, you can have it copy the commands to your clipboard, type `!` and paste the contents of your clipboard, and then hit enter to execute the command, without having to leave that terminal, reload the model, etc.
+So of course if you want to stay in interactive mode, you can have it copy the commands to your clipboard, type `!` and paste the contents of your clipboard, and then hit enter to execute the command, without having to leave that terminal, reload the model, etc.
 
 # Disclaimer
 
