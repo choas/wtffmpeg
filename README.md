@@ -17,7 +17,7 @@ Execute this command? [y/N] y
 
 Executing: ffmpeg -i my_video.avi -an -c:v libx264 my_video.mp4
 
-ffmpeg version n6.0 Copyright (c) 2000-2023 the FFmpeg developers
+ffmpeg version N-100029-g040e989223 Copyright (c) 2000-2020 the FFmpeg developers
 ...
 ```
 
