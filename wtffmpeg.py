@@ -4,7 +4,6 @@ import argparse
 import sys
 import subprocess
 import pyperclip
-import shlex
 from llama_cpp import Llama
 
 SYSTEM_PROMPT = """You are an expert at writing commands for the `ffmpeg` multimedia framework.
