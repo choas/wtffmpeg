@@ -131,7 +131,7 @@ Execute? [y/N], or (c)opy to clipboard: N
 
 Here the model incorrectly added the `-c copy` flag, which is not valid when using a filter like `-vf "reverse"`, and had we executed this command, ffmpeg would have given us an explicit error telling us that the `-c copy` flag is not compatible with the filter. 
 
-So while we *could* copy the commmand to our clipboard, and execute it with the `! command` syntax from within interactive mode after pasting and editing the command-line,let's edit our wtff prompt to ensure that the model does not add the `-c copy` flag in this case. We'll just up-arrow to get our prompt history and add a sentence to our prompt:
+So while we *could* copy the commmand to our clipboard, and execute it with the `! command` syntax from within interactive mode after pasting and editing the command-line, let's edit our wtff prompt instead to ensure that the model does not add the `-c copy` flag in this case. We'll just up-arrow to get our prompt history and add a sentence to our prompt:
 
 ```bash
 wtff> reverse the video test_pattern.mp4. Do not use `-c copy` in your command.
