@@ -34,7 +34,7 @@ This project uses Python 3.8+ and is packaged with pyproject.toml.
 1. Clone the Repository
 
 ```bash
-git clone https://github.com/scottvr/wtffmpeg.git # Replace with your repo URL
+git clone https://github.com/scottvr/wtffmpeg.git
 cd wtffmpeg
 ```
 
