@@ -218,7 +218,7 @@ def main():
         llm = Llama(
             model_path=MODEL_PATH,
             n_gpu_layers=args.gpu_layers,
-            n_ctx=32768,
+            n_ctx=4096,
             verbose=False
         )
     except Exception as e:
