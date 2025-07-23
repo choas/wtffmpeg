@@ -84,8 +84,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone https://github.com/scottvr/wtffmpeg.git
 cd wtffmpeg
 chmod +x wtffmpeg.py
-sudo ln -s $(pwd)/wtffmpeg.py /usr/local/bin/wtffmpeg
-wtffmpeg
+sudo ln -s $(pwd)/wtffmpeg.py /usr/local/bin/wtff
+wtff
 ```
 
 ## Configuration

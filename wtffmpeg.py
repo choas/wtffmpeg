@@ -2,7 +2,8 @@
 # /// script
 # dependencies = [
 # "llama-cpp-python", 
-# "pyperclip"
+# "pyperclip",
+# "huggingface_hub"
 # ]
 # ///
 
@@ -11,6 +12,8 @@ import sys
 import subprocess
 import pyperclip
 from llama_cpp import Llama
+from pathlib import Path
+from huggingface_hub import hf_hub_download
 
 SYSTEM_PROMPT = """You are an expert at writing commands for the `ffmpeg` multimedia framework.
 You will be given a plain-language description of a task.
@@ -225,6 +228,32 @@ def interactive_mode(llm: Llama):
             print("\nExiting interactive mode.")
             break
 
+def check_and_download_model(model_path: str, skip_hf_check: bool) -> str:
+    """
+    Checks if the model file exists, downloads it from Hugging Face if not present,
+    unless skip_hf_check is True.
+    """
+    model_file = Path(model_path)
+    if skip_hf_check:
+        if not model_file.exists():
+            print(f"Model file {model_path} not found and --skip-hf-check is set.", file=sys.stderr)
+            sys.exit(1)
+        return model_path
+
+    if not model_file.exists():
+        print(f"Model file {model_path} not found. Downloading from Hugging Face...")
+        try:
+            model_path = hf_hub_download(
+                repo_id="microsoft/Phi-3-mini-4k-instruct-gguf",
+                filename="Phi-3-mini-4k-instruct-q4.gguf",
+                local_dir="."
+            )
+            print(f"Model downloaded to {model_path}")
+        except Exception as e:
+            print(f"Error downloading model: {e}", file=sys.stderr)
+            sys.exit(1)
+    return model_path
+
 def main():
     parser = argparse.ArgumentParser(
         description="Translate natural language to an ffmpeg command.",
@@ -265,22 +294,30 @@ def main():
         action="store_true",
         help="Enter interactive mode to run multiple commands."
     )
+    parser.add_argument(
+        "--skip-hf-check",
+        action="store_true",
+        help="Skip checking and downloading the model from Hugging Face."
+    )
     args = parser.parse_args()
 
     if not args.interactive and not args.prompt:
         parser.error("The 'prompt' argument is required for non-interactive mode.")
 
+    print("Checking model availability...")
+    model_path = check_and_download_model(args.model, args.skip_hf_check)
+    
     print("Loading model... (this may take a moment)")
     try:
         llm = Llama(
-            model_path=args.model,
+            model_path=model_path,
             n_gpu_layers=args.gpu_layers,
             n_ctx=4096,
             verbose=False
         )
     except Exception as e:
-        print(f"Error loading model from path: {args.model}", file=sys.stderr)
-        print(f"Please ensure the path provided via --model  correct.", file=sys.stderr)
+        print(f"Error loading model from path: {model_path}", file=sys.stderr)
+        print(f"Please ensure the path provided via --model is correct.", file=sys.stderr)
         sys.exit(1)
     
     print("Model loaded.")
