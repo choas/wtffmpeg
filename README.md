@@ -73,10 +73,31 @@ Once llama-cpp-python is installed, you can install the project and its dependen
 ```bash
 pip install .
 ```
+### Install with uv
+- Setup uv if you don't alredy have it
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+. "$HOME/.local/bin/env"
+```
+- link and run as an executable (I've included PEP723 uv support to manage python dependencies)
+```bash
+git clone https://github.com/scottvr/wtffmpeg.git
+cd wtffmpeg
+chmod +x wtffmpeg.py
+sudo ln -s $(pwd)/wtffmpeg.py /usr/local/bin/wtffmpeg
+wtffmpeg
+```
 
 ## Configuration
 1. Download a Model
-   
+
+- [https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf)
+
+```
+cd wtffmpeg
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf
+```
+
 This tool requires a model in the GGUF format. You can download models from Hugging Face. Good candidates include:
 
 Phi-3-mini-4k-instruct-gguf
