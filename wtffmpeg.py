@@ -3,6 +3,7 @@
 import argparse
 import sys
 import subprocess
+import pyperclip
 import shlex
 from llama_cpp import Llama
 
@@ -127,13 +128,6 @@ Here are some examples:
 def generate_ffmpeg_command(prompt: str, llm: Llama) -> str:
     """
     Generates an ffmpeg command by sending a prompt to the LLM.
-
-    Args:
-        prompt: The user's natural language request.
-        llm: The initialized Llama model instance.
-
-    Returns:
-        The generated ffmpeg command as a string.
     """
     try:
         response = llm.create_chat_completion(
@@ -146,7 +140,13 @@ def generate_ffmpeg_command(prompt: str, llm: Llama) -> str:
         )
         command = response['choices'][0]['message']['content'].strip()
         
-        # Clean up potential model artifacts like prefixes or markdown code blocks.
+        # More robust cleaning for models that add commentary and markdown
+        if "```" in command:
+            command = command.split("```")[1].strip()
+            # Handle cases like ```bash ... ```
+            if command.lower().startswith(('bash', 'sh')):
+                command = command.split('\n', 1)[1].strip()
+        
         if command.lower().startswith("assistant:"):
             command = command[10:].strip()
         if command.startswith("`") and command.endswith("`"):
@@ -159,17 +159,14 @@ def generate_ffmpeg_command(prompt: str, llm: Llama) -> str:
 
 def execute_command(command: str):
     """
-    Executes a command in the shell and streams its output.
-
-    Args:
-        command: The command string to execute.
+    Executes a command in the system's shell and streams its output.
+    This uses shell=True to properly handle shell built-ins, aliases, and other shell features.
     """
     print(f"\nExecuting: {command}\n")
     try:
-        # Use shlex.split to safely parse the command string
-        args = shlex.split(command)
-        # Use Popen to run the command and stream output in real-time
-        with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as proc:
+        # Use shell=True to allow shell built-ins and other features.
+        # The command is passed as a single string.
+        with subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True) as proc:
             if proc.stdout:
                 for line in proc.stdout:
                     print(line, end='')
@@ -179,12 +176,53 @@ def execute_command(command: str):
         else:
             print(f"\n--- Command failed with exit code {proc.returncode} ---", file=sys.stderr)
 
-    except FileNotFoundError:
-        print(f"Error: The command '{args[0]}' was not found.", file=sys.stderr)
-        print("Please ensure ffmpeg is installed and in your system's PATH.", file=sys.stderr)
     except Exception as e:
+        # A general catch-all for other potential subprocess errors.
         print(f"An error occurred while trying to execute the command: {e}", file=sys.stderr)
 
+
+def interactive_mode(llm: Llama):
+    """
+    Enters a loop to accept multiple prompts from the user.
+    """
+    print("Entering interactive mode. Type 'exit' or 'quit' to leave.")
+    while True:
+        try:
+            prompt = input("wtff> ")
+            if prompt.lower() in ['exit', 'quit']:
+                break
+            if not prompt:
+                continue
+
+            # Check for shell command execution
+            if prompt.startswith('!'):
+                shell_command = prompt[1:].strip()
+                if shell_command:
+                    execute_command(shell_command)
+                continue # Loop back for the next prompt
+
+            ffmpeg_command = generate_ffmpeg_command(prompt, llm)
+            if not ffmpeg_command:
+                print("Failed to generate a command.", file=sys.stderr)
+                continue
+            
+            print("\n--- Generated ffmpeg Command ---")
+            print(ffmpeg_command)
+            print("------------------------------")
+
+            confirm = input("Execute? [y/N], or (c)opy to clipboard: ")
+            if confirm.lower() == 'y':
+                pyperclip.copy(ffmpeg_command)
+                execute_command(ffmpeg_command)
+            elif confirm.lower() == 'c':
+                pyperclip.copy(ffmpeg_command)
+                print("Command copied to clipboard.")
+            else:
+                print("Execution cancelled.")
+
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting interactive mode.")
+            break
 
 def main():
     """
@@ -196,9 +234,17 @@ def main():
     )
     parser.add_argument(
         "prompt",
+        nargs='?', # Make the prompt optional for interactive mode
+        default=None,
         type=str,
         help="The natural language instruction for the ffmpeg command.\n"
-             "Example: \"convert video.mp4 to audio.mp3\""
+             "Required unless running in interactive mode."
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="./Phi-3-mini-4k-instruct-q4.gguf",
+        help="Path to the GGUF model file."
     )
     parser.add_argument(
         "--gpu-layers",
@@ -211,28 +257,50 @@ def main():
         action="store_true",
         help="Execute the generated command without confirmation."
     )
+    parser.add_argument(
+        "-c", "--copy",
+        action="store_true",
+        help="Copy the generated command to the clipboard."
+    )
+    parser.add_argument(
+        "-i", "--interactive",
+        action="store_true",
+        help="Enter interactive mode to run multiple commands."
+    )
     args = parser.parse_args()
+
+    if not args.interactive and not args.prompt:
+        parser.error("The 'prompt' argument is required for non-interactive mode.")
 
     print("Loading model... (this may take a moment)")
     try:
         llm = Llama(
-            model_path=MODEL_PATH,
+            model_path=args.model,
             n_gpu_layers=args.gpu_layers,
             n_ctx=4096,
             verbose=False
         )
     except Exception as e:
-        print(f"Error loading model from path: {MODEL_PATH}", file=sys.stderr)
-        print(f"Please ensure the MODEL_PATH in the script is correct.", file=sys.stderr)
-        print(f"Error details: {e}", file=sys.stderr)
+        print(f"Error loading model from path: {args.model}", file=sys.stderr)
+        print(f"Please ensure the path provided via --model  correct.", file=sys.stderr)
         sys.exit(1)
+    
+    print("Model loaded.")
 
-    print("Model loaded. Generating command...")
+    if args.interactive:
+        interactive_mode(llm)
+        sys.exit(0)
+
     ffmpeg_command = generate_ffmpeg_command(args.prompt, llm)
 
     if not ffmpeg_command:
         print("Failed to generate a command.", file=sys.stderr)
         sys.exit(1)
+
+    if args.copy:
+        pyperclip.copy(ffmpeg_command)
+        print("Command copied to clipboard.")
+        sys.exit(0)
 
     print("\n--- Generated ffmpeg Command ---")
     print(ffmpeg_command)
@@ -242,17 +310,14 @@ def main():
         execute_command(ffmpeg_command)
     else:
         try:
-            # Prompt user for confirmation
             confirm = input("Execute this command? [y/N] ")
             if confirm.lower() == 'y':
                 execute_command(ffmpeg_command)
             else:
                 print("Execution cancelled by user.")
         except (EOFError, KeyboardInterrupt):
-            # Handle Ctrl+D or Ctrl+C during input
             print("\nExecution cancelled by user.")
             sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

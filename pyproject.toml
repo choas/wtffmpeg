@@ -31,6 +31,7 @@ dependencies = [
     # as this file cannot handle the complex build flags.
     # e.g., for CUDA: CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python
     "llama-cpp-python",
+    "pyperclip",
 ]
 
 # This section creates the command-line script alias.
