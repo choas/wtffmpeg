@@ -76,6 +76,7 @@ pip install .
 
 ## Configuration
 1. Download a Model
+   
 This tool requires a model in the GGUF format. You can download models from Hugging Face. Good candidates include:
 
 Phi-3-mini-4k-instruct-gguf
@@ -85,6 +86,7 @@ Mistral-7B-Instruct-v0.2-GGUF
 Download your chosen model and place it in the project directory.
 
 2. Set the Model Path
+
 Open the wtffmpeg.py script and update the MODEL_PATH variable to point to your downloaded model file:
 
 **In wtffmpeg.py**
