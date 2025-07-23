@@ -7,10 +7,6 @@ import pyperclip
 import shlex
 from llama_cpp import Llama
 
-#MODEL_PATH = "./Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf"
-#MODEL_PATH='./Phi-3-mini-4k-instruct-q4.gguf'
-MODEL_PATH='./mistral-7b-instruct-v0.1.Q3_K_M.gguf'
-
 SYSTEM_PROMPT = """You are an expert at writing commands for the `ffmpeg` multimedia framework.
 You will be given a plain-language description of a task.
 Your task is to translate this description into a single, complete, and executable `ffmpeg` command.
@@ -225,9 +221,6 @@ def interactive_mode(llm: Llama):
             break
 
 def main():
-    """
-    Main function to parse arguments, load the model, and run the translation.
-    """
     parser = argparse.ArgumentParser(
         description="Translate natural language to an ffmpeg command.",
         formatter_class=argparse.RawTextHelpFormatter
