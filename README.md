@@ -28,7 +28,47 @@ ffmpeg version N-100029-g040e989223 Copyright (c) 2000-2020 the FFmpeg developer
 - GPU Accelerated: Leverages llama-cpp-python to offload model layers to your GPU for faster inference.
 - Customizable: Easily swap out different LLM models or customize the system prompt to improve accuracy for your specific needs.
 
-## Installation
+## help
+```
+usage: wtffmpeg.py [-h] [--model MODEL] [--gpu-layers GPU_LAYERS] [-x] [-c] [-i] [--skip-hf-check] [prompt]
+
+Translate natural language to an ffmpeg command.
+
+positional arguments:
+  prompt                The natural language instruction for the ffmpeg command.
+                        Required unless running in interactive mode.
+
+options:
+  -h, --help            show this help message and exit
+  --model MODEL         Path to the GGUF model file.
+  --gpu-layers GPU_LAYERS
+                        Number of layers to offload to the GPU (-1 for all).
+  -x, --execute         Execute the generated command without confirmation.
+  -c, --copy            Copy the generated command to the clipboard.
+  -i, --interactive     Enter interactive mode to run multiple commands.
+  --skip-hf-check       Skip checking and downloading the model from Hugging Face.
+```
+
+## Install with uv
+- Setup uv if you don't alredy have it
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+. "$HOME/.local/bin/env"
+```
+- run as an executable (Included PEP723 uv support to manage python dependencies, automatically downloads model from HuggingFace)
+```bash
+git clone https://github.com/scottvr/wtffmpeg.git
+cd wtffmpeg
+chmod +x wtffmpeg.py
+./wtffmpeg.py
+```
+- link (if you choose)
+```
+sudo ln -s $(pwd)/wtffmpeg.py /usr/local/bin/wtff
+wtff
+```
+
+## Installation (manually)
 This project uses Python 3.8+ and is packaged with pyproject.toml.
 
 1. Clone the Repository
@@ -74,9 +114,16 @@ Once llama-cpp-python is installed, you can install the project and its dependen
 pip install .
 ```
 
+
 ## Configuration
-1. Download a Model
-   
+1. Download a Model (manually)
+
+- [https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf)
+
+```
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf
+```
+
 This tool requires a model in the GGUF format. You can download models from Hugging Face. Good candidates include:
 
 Phi-3-mini-4k-instruct-gguf
