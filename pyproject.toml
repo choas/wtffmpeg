@@ -22,11 +22,7 @@ classifiers = [
 
 # List your project's dependencies here.
 dependencies = [
-    # For hardware acceleration (like CUDA, Metal, etc.), it's recommended
-    # to install llama-cpp-python manually first, following its documentation,
-    # as this file cannot handle the complex build flags.
-    # e.g., for CUDA: CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python
-    "llama-cpp-python",
+    "openai>=1.107.2",
     "pyperclip",
 ]
 

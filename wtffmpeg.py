@@ -1,9 +1,8 @@
 #!/usr/bin/env -S uv run
 # /// script
 # dependencies = [
-# "llama-cpp-python", 
-# "pyperclip",
-# "huggingface_hub"
+# "openai", 
+# "pyperclip"
 # ]
 # ///
 
@@ -11,9 +10,8 @@ import argparse
 import sys
 import subprocess
 import pyperclip
-from llama_cpp import Llama
-from pathlib import Path
-from huggingface_hub import hf_hub_download
+import os
+from openai import OpenAI
 
 SYSTEM_PROMPT = """You are an expert at writing commands for the `ffmpeg` multimedia framework.
 You will be given a plain-language description of a task.
@@ -129,20 +127,20 @@ Here are some examples:
 - Assistant: ffmpeg -i mymovie.mp4 -i image.png -map 0 -map 1 -c copy -c:v:1 png -disposition:v:1 attached_pic out.mp4
 """
 
-def generate_ffmpeg_command(prompt: str, llm: Llama) -> str:
+def generate_ffmpeg_command(prompt: str, client: OpenAI, model: str) -> str:
     """
     Generates an ffmpeg command by sending a prompt to the LLM.
     """
     try:
-        response = llm.create_chat_completion(
+        response = client.chat.completions.create(
+            model=model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.0,
-            max_tokens=250
         )
-        command = response['choices'][0]['message']['content'].strip()
+        command = response.choices[0].message.content.strip()
         
         # More robust cleaning for models that add commentary and markdown
         if "```" in command:
@@ -185,7 +183,7 @@ def execute_command(command: str):
         print(f"An error occurred while trying to execute the command: {e}", file=sys.stderr)
 
 
-def interactive_mode(llm: Llama):
+def interactive_mode(client: OpenAI, model: str):
     """
     Enters a loop to accept multiple prompts from the user.
     """
@@ -205,7 +203,7 @@ def interactive_mode(llm: Llama):
                     execute_command(shell_command)
                 continue # Loop back for the next prompt
 
-            ffmpeg_command = generate_ffmpeg_command(prompt, llm)
+            ffmpeg_command = generate_ffmpeg_command(prompt, client, model)
             if not ffmpeg_command:
                 print("Failed to generate a command.", file=sys.stderr)
                 continue
@@ -228,31 +226,8 @@ def interactive_mode(llm: Llama):
             print("\nExiting interactive mode.")
             break
 
-def check_and_download_model(model_path: str, skip_hf_check: bool) -> str:
-    """
-    Checks if the model file exists, downloads it from Hugging Face if not present,
-    unless skip_hf_check is True.
-    """
-    model_file = Path(model_path)
-    if skip_hf_check:
-        if not model_file.exists():
-            print(f"Model file {model_path} not found and --skip-hf-check is set.", file=sys.stderr)
-            sys.exit(1)
-        return model_path
 
-    if not model_file.exists():
-        print(f"Model file {model_path} not found. Downloading from Hugging Face...")
-        try:
-            model_path = hf_hub_download(
-                repo_id="microsoft/Phi-3-mini-4k-instruct-gguf",
-                filename="Phi-3-mini-4k-instruct-q4.gguf",
-                local_dir="."
-            )
-            print(f"Model downloaded to {model_path}")
-        except Exception as e:
-            print(f"Error downloading model: {e}", file=sys.stderr)
-            sys.exit(1)
-    return model_path
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -264,20 +239,32 @@ def main():
         nargs='?', # Make the prompt optional for interactive mode
         default=None,
         type=str,
-        help="The natural language instruction for the ffmpeg command.\n"
+        help="The natural language instruction for the ffmpeg command.\n" \
              "Required unless running in interactive mode."
     )
     parser.add_argument(
         "--model",
         type=str,
-        default="./Phi-3-mini-4k-instruct-q4.gguf",
-        help="Path to the GGUF model file."
+        default="llama3",
+        help="The model to use. For Ollama, this should be a model you have downloaded. Defaults to 'llama3'."
     )
     parser.add_argument(
-        "--gpu-layers",
-        type=int,
-        default=-1,
-        help="Number of layers to offload to the GPU (-1 for all)."
+        "--api-key",
+        type=str,
+        default=os.environ.get("OPENAI_API_KEY"),
+        help="OpenAI API key. Defaults to OPENAI_API_KEY environment variable."
+    )
+    parser.add_argument(
+        "--bearer-token",
+        type=str,
+        default=os.environ.get("BEARER_TOKEN"),
+        help="Bearer token for authentication. Defaults to BEARER_TOKEN environment variable."
+    )
+    parser.add_argument(
+        "--url",
+        type=str,
+        default=os.environ.get("OLLAMA_URL", "http://localhost:11434"),
+        help="Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to OLLAMA_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically."
     )
     parser.add_argument(
         "-x", "--execute",
@@ -294,39 +281,36 @@ def main():
         action="store_true",
         help="Enter interactive mode to run multiple commands."
     )
-    parser.add_argument(
-        "--skip-hf-check",
-        action="store_true",
-        help="Skip checking and downloading the model from Hugging Face."
-    )
     args = parser.parse_args()
 
     if not args.interactive and not args.prompt:
         parser.error("The 'prompt' argument is required for non-interactive mode.")
 
-    print("Checking model availability...")
-    model_path = check_and_download_model(args.model, args.skip_hf_check)
-    
-    print("Loading model... (this may take a moment)")
-    try:
-        llm = Llama(
-            model_path=model_path,
-            n_gpu_layers=args.gpu_layers,
-            n_ctx=4096,
-            verbose=False
-        )
-    except Exception as e:
-        print(f"Error loading model from path: {model_path}", file=sys.stderr)
-        print(f"Please ensure the path provided via --model is correct.", file=sys.stderr)
-        sys.exit(1)
-    
-    print("Model loaded.")
+    # If an API key is provided, use OpenAI. Otherwise, assume Ollama or another bearer-token based service.
+    if args.api_key:
+        client = OpenAI(api_key=args.api_key)
+        # If using OpenAI, but the model is the default 'llama3', change it to a sensible OpenAI default.
+        if args.model == "llama3":
+            args.model = "gpt-4o"
+    else:
+        base_url = args.url
+        # Ensure the URL for Ollama ends with /v1 for OpenAI client compatibility
+        if not base_url.endswith("/v1"):
+            base_url = base_url.rstrip('/') + "/v1"
+
+        # Print a message if we are using the hardcoded default Ollama URL
+        if args.url == "http://localhost:11434" and not os.environ.get("OLLAMA_URL"):
+             print(f"INFO: No API key or OLLAMA_URL env var provided. Defaulting to local Ollama at {args.url}")
+        
+        # Use the bearer token if provided, otherwise use a dummy key for Ollama.
+        api_key = args.bearer_token if args.bearer_token else "ollama"
+        client = OpenAI(base_url=base_url, api_key=api_key)
 
     if args.interactive:
-        interactive_mode(llm)
+        interactive_mode(client, args.model)
         sys.exit(0)
 
-    ffmpeg_command = generate_ffmpeg_command(args.prompt, llm)
+    ffmpeg_command = generate_ffmpeg_command(args.prompt, client, args.model)
 
     if not ffmpeg_command:
         print("Failed to generate a command.", file=sys.stderr)
@@ -353,6 +337,7 @@ def main():
         except (EOFError, KeyboardInterrupt):
             print("\nExecution cancelled by user.")
             sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
