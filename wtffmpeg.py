@@ -263,8 +263,8 @@ def main():
     parser.add_argument(
         "--url",
         type=str,
-        default=os.environ.get("OLLAMA_URL", "http://localhost:11434"),
-        help="Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to OLLAMA_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically."
+        default=os.environ.get("LLM_API_URL", "http://localhost:11434"),
+        help="Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to LLM_API_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically."
     )
     parser.add_argument(
         "-x", "--execute",
@@ -299,8 +299,8 @@ def main():
             base_url = base_url.rstrip('/') + "/v1"
 
         # Print a message if we are using the hardcoded default Ollama URL
-        if args.url == "http://localhost:11434" and not os.environ.get("OLLAMA_URL"):
-             print(f"INFO: No API key or OLLAMA_URL env var provided. Defaulting to local Ollama at {args.url}")
+        if args.url == "http://localhost:11434" and not os.environ.get("LLM_API_URL"):
+             print(f"INFO: No API key or LLM_API_URL env var provided. Defaulting to local Ollama at {args.url}")
         
         # Use the bearer token if provided, otherwise use a dummy key for Ollama.
         api_key = args.bearer_token if args.bearer_token else "ollama"
