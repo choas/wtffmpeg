@@ -64,16 +64,16 @@ This script uses `uv` to manage its dependencies.
 
 You can create a `.env` file in the project directory or export these variables in your shell. An `example.env` file is provided.
 
--   `LLM_API_URL`: The base URL for your local LLM API (e.g., `http://localhost:11434`). This is the default connection method if no API key is provided.
--   `OPENAI_API_KEY`: Your API key for the OpenAI service.
--   `BEARER_TOKEN`: A bearer token for authentication with other OpenAI-compatible services.
+-   `WTFFMPEG_LLM_API_URL`: The base URL for your local LLM API (e.g., `http://localhost:11434`). This is the default connection method if no API key is provided.
+-   `WTFFMPEG_OPENAI_API_KEY`: Your API key for the OpenAI service.
+-   `WTFFMPEG_BEARER_TOKEN`: A bearer token for authentication with other OpenAI-compatible services.
 
 ### Connection Logic
 
 The tool decides which service to use based on the following priority:
-1.  If `--api-key` or `OPENAI_API_KEY` is provided, it will connect to the official OpenAI API.
-2.  If not, it will look for `--bearer-token` or `BEARER_TOKEN` to authenticate with a custom API endpoint.
-3.  If neither of the above is present, it will fall back to using the `--url` or `LLM_API_URL`, defaulting to a local Ollama instance at `http://localhost:11434`.
+1.  If `--api-key` or `WTFFMPEG_OPENAI_API_KEY` is provided, it will connect to the official OpenAI API.
+2.  If not, it will look for `--bearer-token` or `WTFFMPEG_BEARER_TOKEN` to authenticate with a custom API endpoint.
+3.  If neither of the above is present, it will fall back to using the `--url` or `WTFFMPEG_LLM_API_URL`, defaulting to a local Ollama instance at `http://localhost:11434`.
 
 ## Usage
 

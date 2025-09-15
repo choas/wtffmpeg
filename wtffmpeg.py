@@ -245,26 +245,26 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="llama3",
-        help="The model to use. For Ollama, this should be a model you have downloaded. Defaults to 'llama3'."
+        default=os.environ.get("WTFFMPEG_MODEL", "llama3"),
+        help="The model to use. For Ollama, this should be a model you have downloaded. Defaults to the WTFFMPEG_MODEL env var, then 'llama3'."
     )
     parser.add_argument(
         "--api-key",
         type=str,
-        default=os.environ.get("OPENAI_API_KEY"),
-        help="OpenAI API key. Defaults to OPENAI_API_KEY environment variable."
+        default=os.environ.get("WTFFMPEG_OPENAI_API_KEY"),
+        help="OpenAI API key. Defaults to WTFFMPEG_OPENAI_API_KEY environment variable."
     )
     parser.add_argument(
         "--bearer-token",
         type=str,
-        default=os.environ.get("BEARER_TOKEN"),
-        help="Bearer token for authentication. Defaults to BEARER_TOKEN environment variable."
+        default=os.environ.get("WTFFMPEG_BEARER_TOKEN"),
+        help="Bearer token for authentication. Defaults to WTFFMPEG_BEARER_TOKEN environment variable."
     )
     parser.add_argument(
         "--url",
         type=str,
-        default=os.environ.get("LLM_API_URL", "http://localhost:11434"),
-        help="Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to LLM_API_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically."
+        default=os.environ.get("WTFFMPEG_LLM_API_URL", "http://localhost:11434"),
+        help="Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to WTFFMPEG_LLM_API_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically."
     )
     parser.add_argument(
         "-x", "--execute",
@@ -299,8 +299,8 @@ def main():
             base_url = base_url.rstrip('/') + "/v1"
 
         # Print a message if we are using the hardcoded default Ollama URL
-        if args.url == "http://localhost:11434" and not os.environ.get("LLM_API_URL"):
-             print(f"INFO: No API key or LLM_API_URL env var provided. Defaulting to local Ollama at {args.url}")
+        if args.url == "http://localhost:11434" and not os.environ.get("WTFFMPEG_LLM_API_URL"):
+             print(f"INFO: No API key or WTFFMPEG_LLM_API_URL env var provided. Defaulting to local Ollama at {args.url}")
         
         # Use the bearer token if provided, otherwise use a dummy key for Ollama.
         api_key = args.bearer_token if args.bearer_token else "ollama"
