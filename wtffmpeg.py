@@ -245,7 +245,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default=os.environ.get("WTFFMPEG_MODEL", "llama3"),
+        default=os.environ.get("WTFFMPEG_MODEL", "gpt-oss:20b"),
         help="The model to use. For Ollama, this should be a model you have downloaded. Defaults to the WTFFMPEG_MODEL env var, then 'llama3'."
     )
     parser.add_argument(
