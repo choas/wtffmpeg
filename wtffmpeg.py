@@ -246,7 +246,7 @@ def main():
         "--model",
         type=str,
         default=os.environ.get("WTFFMPEG_MODEL", "gpt-oss:20b"),
-        help="The model to use. For Ollama, this should be a model you have downloaded. Defaults to the WTFFMPEG_MODEL env var, then 'llama3'."
+        help="The model to use. For Ollama, this should be a model you have downloaded. Defaults to the WTFFMPEG_MODEL env var, then 'gpt-oss:20b'."
     )
     parser.add_argument(
         "--api-key",
@@ -289,8 +289,8 @@ def main():
     # If an API key is provided, use OpenAI. Otherwise, assume Ollama or another bearer-token based service.
     if args.api_key:
         client = OpenAI(api_key=args.api_key)
-        # If using OpenAI, but the model is the default 'llama3', change it to a sensible OpenAI default.
-        if args.model == "llama3":
+        # If using OpenAI, but the model is the default, change it to a sensible OpenAI default.
+        if args.model == "gpt-oss:20b":
             args.model = "gpt-4o"
     else:
         base_url = args.url
@@ -337,6 +337,7 @@ def main():
         except (EOFError, KeyboardInterrupt):
             print("\nExecution cancelled by user.")
             sys.exit(0)
+
 
 
 if __name__ == "__main__":

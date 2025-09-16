@@ -64,6 +64,7 @@ This script uses `uv` to manage its dependencies.
 
 You can create a `.env` file in the project directory or export these variables in your shell. An `example.env` file is provided.
 
+-   `WTFFMPEG_MODEL`: The model to use (e.g., `gpt-oss:20b`, `llama3`).
 -   `WTFFMPEG_LLM_API_URL`: The base URL for your local LLM API (e.g., `http://localhost:11434`). This is the default connection method if no API key is provided.
 -   `WTFFMPEG_OPENAI_API_KEY`: Your API key for the OpenAI service.
 -   `WTFFMPEG_BEARER_TOKEN`: A bearer token for authentication with other OpenAI-compatible services.
@@ -89,11 +90,11 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --model MODEL         The model to use. For Ollama, this should be a model you have downloaded. Defaults to 'llama3'.
-  --api-key API_KEY     OpenAI API key. Defaults to OPENAI_API_KEY environment variable.
+  --model MODEL         The model to use. For Ollama, this should be a model you have downloaded. Defaults to the WTFFMPEG_MODEL env var, then 'gpt-oss:20b'.
+  --api-key API_KEY     OpenAI API key. Defaults to WTFFMPEG_OPENAI_API_KEY environment variable.
   --bearer-token BEARER_TOKEN
-                        Bearer token for authentication. Defaults to BEARER_TOKEN environment variable.
-  --url URL             Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to LLM_API_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically.
+                        Bearer token for authentication. Defaults to WTFFMPEG_BEARER_TOKEN environment variable.
+  --url URL             Base URL for a local LLM API (e.g., http://localhost:11434). Defaults to WTFFMPEG_LLM_API_URL env var, then http://localhost:11434. The '/v1' suffix for OpenAI compatibility will be added automatically.
   -x, --execute         Execute the generated command without confirmation.
   -c, --copy            Copy the generated command to the clipboard.
   -i, --interactive     Enter interactive mode to run multiple commands.
@@ -103,7 +104,7 @@ options:
 
 **Using the Default Local Ollama Instance:**
 ```bash
-# The tool defaults to http://localhost:11434 and the 'llama3' model
+# The tool defaults to http://localhost:11434 and the 'gpt-oss:20b' model
 wtff "turn presentation.mov into a web-friendly mp4"
 
 # Specify a different local model
